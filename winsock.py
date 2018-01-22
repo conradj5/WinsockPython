@@ -20,8 +20,6 @@ class Winsock:
 
         bytes = self.sock.recv(buf)
         while len(bytes) > 0:
-            print(bytes)
-            print(bytes.decode('ISO-8859-1'))
             resp += bytes
             bytes = self.sock.recv(buf)
 
