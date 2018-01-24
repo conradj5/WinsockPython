@@ -15,4 +15,4 @@ Project Details:
 		
 
 Notes:
-	To run the code, you will want to run the main.py file that we have presented in the WinsockPython directory.
+	To run the code, you will want to run the weiler_conrad_gore_main.py file that we have presented in the WinsockPython directory.
