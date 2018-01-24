@@ -1,5 +1,5 @@
-from winsock import Winsock
-from parsedurl import UrlParser
+from weiler_conrad_gore_winsock import Winsock
+from weiler_conrad_gore_parsedurl import UrlParser
 
 # parse url #
 parsed_url = UrlParser("http://www.google.com/")
