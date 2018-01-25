@@ -1,12 +1,10 @@
 import socket
-import urllib
 
 
-class Winsock:
-    sock = None
-
+class Pysock:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(20)  # 20 second timeout
 
     def connect(self, ip, port):
         self.sock.connect((ip, port))
@@ -16,12 +14,12 @@ class Winsock:
 
     def receive(self):
         resp = b""
-        buf = 1024
+        buf_size = 1024
 
-        bytes = self.sock.recv(buf)
-        while len(bytes) > 0:
-            resp += bytes
-            bytes = self.sock.recv(buf)
+        buf = self.sock.recv(buf_size)
+        while len(buf) > 0:
+            resp += buf
+            buf = self.sock.recv(buf_size)
 
         for i in ['utf-8', 'ISO-8859-1']:
             try:
