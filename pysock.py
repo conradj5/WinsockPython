@@ -4,7 +4,7 @@ import socket
 class Pysock:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(20)  # 20 second timeout
+        self.sock.settimeout(10)  # 10 second timeout
 
     def connect(self, ip, port):
         self.sock.connect((ip, port))

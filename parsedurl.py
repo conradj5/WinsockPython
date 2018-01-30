@@ -1,12 +1,11 @@
 from urllib.parse import urlparse
-from socket import gethostbyname
 
 
 class UrlParser:
     def __init__(self, link):
-        parsed_url = urlparse(link)
+        parsed_url = urlparse(link.strip(' \t\n\r'))
+        self.ip = ""
         self.host = parsed_url.hostname
-        self.ip = gethostbyname(parsed_url.hostname)
         self.port = parsed_url.port
         if self.port is None: self.port = 80
         self.path = parsed_url.path
