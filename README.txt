@@ -1,5 +1,7 @@
 Names: Matthew Weiler, Jonathan Conrad, Joseph Gore
 
+Python Version: 3
+
 Project Details:
 
 	URL (hardcoded in main.py):
