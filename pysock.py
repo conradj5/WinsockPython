@@ -19,6 +19,8 @@ class Pysock:
         buf = self.sock.recv(buf_size)
         while len(buf) > 0:
             resp += buf
+            if len(resp) > 2097152:
+                raise socket.timeout
             buf = self.sock.recv(buf_size)
 
         for i in ['utf-8', 'ISO-8859-1']:
