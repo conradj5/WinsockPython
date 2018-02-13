@@ -18,8 +18,8 @@ queue = Queue()
 
 get_time = lambda: int(round(time() * 1000))
 
-head_req = 'HEAD /robots.txt HTTP/1.1\r\nUser-agent: udaytoncrawler/1.0\r\nHost: {}\r\nConnection: keep-alive\r\n\r\n'
-get_req = 'GET {}{} HTTP/1.1\r\nUser-agent: udaytoncrawler/1.0\r\nHost: {}\r\nConnection: keep-alive\r\n\r\n'
+head_req = 'HEAD /robots.txt HTTP/1.0\r\nHost: {}\r\nUser-agent: udaytoncrawler/1.0\r\n\r\n'
+get_req = 'GET {}{} HTTP/1.0\r\nHost: {}\r\nUser-agent: udaytoncrawler/1.0\r\n\r\n'
 
 
 def unique_host(host):
@@ -211,7 +211,7 @@ queue.join()
 print("Extracted {} URLs @ {}/s".format(DATA['urls'], DATA['urls_time']/1000))
 print("Looked up {} DNS names @ {}/s".format(DATA['dns'], DATA['dns_time']/1000))
 print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/1000))
-print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_time']/1000, DATA['page_size']/1048576))
+print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_time']/1000, DATA['page_size']/10000000))
 print("Parsed {} links @ {}/s".format(DATA['link'], DATA['link_time']/10000))
 print("HTTP codes: 2xx = {}, 3xx = {}, 4xx = {}, 5xx = {}".format(DATA['code2'], DATA['code3'], DATA['code4'], DATA['code5']))
 print("done")
