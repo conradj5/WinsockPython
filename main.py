@@ -220,7 +220,7 @@ except IOError:
 
 # block until all items in queue call task_done() #
 queue.join()
-print("DATA: " + str(DATA))
+# print("DATA: " + str(DATA))
 print("Extracted {} URLs @ {}/s".format(DATA['urls'], DATA['urls_time']/1000))
 print("Looked up {} DNS names @ {}/s".format(DATA['dns'], DATA['dns_time']/1000))
 print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/1000))
