@@ -59,7 +59,7 @@ def run_task(url):
 
     # check if host is unique #
     message += "\tChecking host uniqueness... "
-    if not unique_host(parsed_url.host):
+    if not unique_host(hash(parsed_url.host)):
         fail(message)
         return data
     message += "passed\n"
@@ -82,7 +82,7 @@ def run_task(url):
 
     # check is IP is unique #
     message += "\tChecking IP uniqueness... "
-    if not unique_ip(parsed_url.ip):
+    if not unique_ip(hash(parsed_url.ip)):
         fail(message)
         return data
     message += "passed\n"
@@ -109,7 +109,7 @@ def run_task(url):
     start = get_time()
     try:
         head_resp = ws.receive()
-        if head_resp is "": raise SocketError
+        if len(head_resp) < 10: raise SocketError
     except SocketError:
         fail(message)
         return data
@@ -151,7 +151,7 @@ def run_task(url):
     start = get_time()
     try:
         get_resp = ws.receive()
-        if get_resp is "": raise SocketError
+        if len(get_resp) < 10: raise SocketError
     except SocketError:
         fail(message)
         return data
@@ -186,13 +186,15 @@ def run():
     while True:
         url = queue.get()
         size = queue.qsize()
-        if size % 1000 is 0:
+        if size != 0 and size % 10000 is 0:
             print('size: ' + str(size) + " " + url)
         data = run_task(url)
         with DATA_LOCK:
             DATA.update(data)
         queue.task_done()
 
+
+start_time = get_time()
 
 for x in range(1, int(argv[1])+1):
     thread = Thread(target=run)
@@ -225,6 +227,5 @@ print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/100
 print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_time']/1000, DATA['page_size']/10000000))
 print("Parsed {} links @ {}/s".format(DATA['link'], DATA['link_time']/10000))
 print("HTTP codes: 2xx = {}, 3xx = {}, 4xx = {}, 5xx = {}".format(DATA['code2'], DATA['code3'], DATA['code4'], DATA['code5']))
-print("done")
+print("done in {}/s".format((get_time() - start_time))/1000)
 
-print(str(argv))
