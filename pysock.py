@@ -2,9 +2,11 @@ import socket
 
 
 class Pysock:
-    def __init__(self):
+    def __init__(self, ssl=False):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(10)  # 10 second timeout
+        if ssl:
+            self.sock = ssl.wrap_socket(self.sock, ssl_version=ssl.PROTOCOL_TLSv1)
 
     def connect(self, ip, port):
         self.sock.connect((ip, port))

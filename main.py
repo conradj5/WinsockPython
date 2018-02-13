@@ -6,7 +6,7 @@ from sys import exit, argv
 from parsedurl import UrlParser
 from collections import Counter
 from threading import Thread, Lock
-from socket import gethostbyname, timeout
+from socket import gethostbyname, error as SocketError
 
 host_set = set()
 host_lock = Lock()
@@ -40,7 +40,7 @@ def unique_ip(ip):
 
 def fail(msg):
     msg += "failed\n"
-    print(msg)
+    # print(msg)
     # queue.task_done()
 
 
@@ -94,20 +94,23 @@ def run_task(url):
     start = get_time()
     try:
         ws.connect(parsed_url.ip, parsed_url.port)
-    except timeout:
+    except SocketError:
         fail(message)
         return data
     message += " done in {}ms\n".format(get_time() - start)
 
     # Send HEAD request #
-    ws.send(head_req.format(parsed_url.host).encode())
-
+    try:
+        ws.send(head_req.format(parsed_url.host).encode())
+    except SocketError:
+        return data
     # load response #
     message += "\tLoading robots ... "
     start = get_time()
     try:
         head_resp = ws.receive()
-    except timeout:
+        if head_resp is "": raise SocketError
+    except SocketError:
         fail(message)
         return data
     data['robot_time'] = get_time() - start_robot
@@ -120,7 +123,7 @@ def run_task(url):
     #data['codes'] = Counter()
     data['code' + head_resp[9]] = 1
     if head_resp[9] is '2':
-        print(message)
+        # print(message)
         # queue.task_done()
         return data
 
@@ -133,20 +136,23 @@ def run_task(url):
     start = get_time()
     try:
         ws.connect(parsed_url.ip, parsed_url.port)
-    except timeout:
+    except SocketError:
         fail(message)
         return data
     message += "done in {}ms\n".format(get_time() - start)
 
     # Send the GET request #
-    ws.send(get_req.format(parsed_url.path, parsed_url.query, parsed_url.host).encode())
-
+    try:
+        ws.send(get_req.format(parsed_url.path, parsed_url.query, parsed_url.host).encode())
+    except:
+        return data
     # load data #
     message += "\tLoading... "
     start = get_time()
     try:
         get_resp = ws.receive()
-    except timeout:
+        if get_resp is "": raise SocketError
+    except SocketError:
         fail(message)
         return data
     data['page_time'] = get_time() - start_page
@@ -157,8 +163,9 @@ def run_task(url):
     # verify header #
     message += "\tVerifying header... status code {}\n".format(get_resp[9:12])
     data['code' + get_resp[9]] = 1
+
     if get_resp is not None and get_resp[9] is not '2':
-        print(message + "\n" + get_resp)
+        # print(message + "\n" + get_resp)
         # queue.task_done()
         return data
 
@@ -171,13 +178,16 @@ def run_task(url):
     message += "done in {}ms with {} links\n".format(get_time() - start, num_links)
     # message += "\tdata: " + str(data)
     ws.sock.close()
-    print(message)
+    # print(message)
     return data
 
 
 def run():
     while True:
         url = queue.get()
+        size = queue.qsize()
+        if size % 1000 is 0:
+            print('size: ' + str(size) + " " + url)
         data = run_task(url)
         with DATA_LOCK:
             DATA.update(data)
@@ -198,6 +208,7 @@ try:
         for line in file:
             queue.put(line)
             url_count += 1
+    print("FINISHED READING IN")
     with DATA_LOCK:
         DATA['urls'] = url_count
         DATA['urls_time'] = get_time() - start
@@ -207,7 +218,7 @@ except IOError:
 
 # block until all items in queue call task_done() #
 queue.join()
-# print("DATA: " + str(DATA))
+print("DATA: " + str(DATA))
 print("Extracted {} URLs @ {}/s".format(DATA['urls'], DATA['urls_time']/1000))
 print("Looked up {} DNS names @ {}/s".format(DATA['dns'], DATA['dns_time']/1000))
 print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/1000))
@@ -215,3 +226,5 @@ print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_tim
 print("Parsed {} links @ {}/s".format(DATA['link'], DATA['link_time']/10000))
 print("HTTP codes: 2xx = {}, 3xx = {}, 4xx = {}, 5xx = {}".format(DATA['code2'], DATA['code3'], DATA['code4'], DATA['code5']))
 print("done")
+
+print(str(argv))
