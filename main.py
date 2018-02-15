@@ -15,6 +15,7 @@ ip_lock = Lock()
 DATA = Counter()
 DATA_LOCK = Lock()
 queue = Queue()
+FILE_LOCK = Lock()
 
 get_time = lambda: int(round(time() * 1000))
 
@@ -44,7 +45,7 @@ def fail(msg):
     # queue.task_done()
 
 
-def run_task(url):
+def run_task(url, ws):
     data = Counter()
     message = "URL: " + url
 
@@ -89,7 +90,7 @@ def run_task(url):
 
     # create socket and connect to server #
     start_robot = get_time()
-    ws = Pysock()
+    # ws = Pysock()
     message += "\tConnecting on robots... "
     start = get_time()
     try:
@@ -186,9 +187,16 @@ def run():
     while True:
         url = queue.get()
         size = queue.qsize()
+        # url = get_url()
+        if not url: break
         if size != 0 and size % 10000 is 0:
             print('size: ' + str(size) + " " + url)
-        data = run_task(url)
+        ws = Pysock()
+        data = run_task(url, ws)
+        try:
+            ws.sock.close()
+        except SocketError:
+            pass
         with DATA_LOCK:
             DATA.update(data)
         queue.task_done()
@@ -218,6 +226,7 @@ except IOError:
     print('No such file: ' + argv[2] + '\n')
     exit()
 
+
 # block until all items in queue call task_done() #
 queue.join()
 # print("DATA: " + str(DATA))
@@ -227,5 +236,5 @@ print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/100
 print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_time']/1000, DATA['page_size']/10000000))
 print("Parsed {} links @ {}/s".format(DATA['link'], DATA['link_time']/10000))
 print("HTTP codes: 2xx = {}, 3xx = {}, 4xx = {}, 5xx = {}".format(DATA['code2'], DATA['code3'], DATA['code4'], DATA['code5']))
-print("done in {}/s".format((get_time() - start_time))/1000)
+print("done in {}/s".format((get_time() - start_time)/1000))
 
