@@ -1,11 +1,15 @@
+#!/usr/bin/env python3
+
+from sys import exit
 from time import time
 from re import findall
 from queue import Queue
 from pysock import Pysock
-from sys import exit, argv
+from os.path import exists
 from parsedurl import UrlParser
 from collections import Counter
 from threading import Thread, Lock
+from argparse import ArgumentParser
 from socket import gethostbyname, error as SocketError
 
 host_set = set()
@@ -202,19 +206,26 @@ def run():
         queue.task_done()
 
 
-start_time = get_time()
+def main():
+    parser = ArgumentParser(description="An HTTP web scraping utility written using raw python sockets")
+    parser.add_argument('num_threads', type=int, help="Number of threads to run")
+    parser.add_argument('url_list_path', type=str, help="Path to list of urls to scrape")
+    args = parser.parse_args()
 
-for x in range(1, int(argv[1])+1):
-    thread = Thread(target=run)
-    thread.daemon = True
-    thread.start()
+    if not exists(args.url_list_path):
+        print("Error: file '%s' not found" % args.url_list_path)
+        exit()
 
-# Try to open file #
-try:
+    start_time = get_time()
+
+    for x in range(1, args.num_threads + 1):
+        thread = Thread(target=run)
+        thread.daemon = True
+        thread.start()
+
     url_count = 0
     start = get_time()
-    with open(argv[2]) as file:
-        print("Opened " + argv[2])
+    with open(args.url_list_path) as file:
         for line in file:
             queue.put(line)
             url_count += 1
@@ -222,19 +233,17 @@ try:
     with DATA_LOCK:
         DATA['urls'] = url_count
         DATA['urls_time'] = get_time() - start
-except IOError:
-    print('No such file: ' + argv[2] + '\n')
-    exit()
 
+    # block until all items in queue call task_done() #
+    queue.join()
+    print("Extracted {} URLs @ {}/s".format(DATA['urls'], DATA['urls_time']/1000))
+    print("Looked up {} DNS names @ {}/s".format(DATA['dns'], DATA['dns_time']/1000))
+    print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/1000))
+    print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_time']/1000, DATA['page_size']/10000000))
+    print("Parsed {} links @ {}/s".format(DATA['link'], DATA['link_time']/10000))
+    print("HTTP codes: 2xx = {}, 3xx = {}, 4xx = {}, 5xx = {}".format(DATA['code2'], DATA['code3'], DATA['code4'], DATA['code5']))
+    print("done in {}/s".format((get_time() - start_time)/1000))
 
-# block until all items in queue call task_done() #
-queue.join()
-# print("DATA: " + str(DATA))
-print("Extracted {} URLs @ {}/s".format(DATA['urls'], DATA['urls_time']/1000))
-print("Looked up {} DNS names @ {}/s".format(DATA['dns'], DATA['dns_time']/1000))
-print("Downloaded {} robots @ {}/s".format(DATA['robot'], DATA['robot_time']/1000))
-print("Crawled {} pages @ {}/s (1651.63 MB)".format(DATA['page'], DATA['page_time']/1000, DATA['page_size']/10000000))
-print("Parsed {} links @ {}/s".format(DATA['link'], DATA['link_time']/10000))
-print("HTTP codes: 2xx = {}, 3xx = {}, 4xx = {}, 5xx = {}".format(DATA['code2'], DATA['code3'], DATA['code4'], DATA['code5']))
-print("done in {}/s".format((get_time() - start_time)/1000))
+if __name__ == "__main__":
+    main()
 
